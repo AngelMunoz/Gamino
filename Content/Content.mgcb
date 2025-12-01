@@ -1,3 +1,4 @@
+
 #----------------------------- Global Properties ----------------------------#
 
 /outputDir:bin/$(Platform)
@@ -30,44 +31,6 @@
 /processorParam:SwapWindingOrder=False
 /processorParam:TextureFormat=Compressed
 /build:KayKit_Prototype_Bits_1.1_FREE/Assets/obj/Barrel_A.obj
-
-#begin KayKit_Prototype_Bits_1.1_FREE/Assets/obj/Dummy_Base.obj
-/importer:FbxImporter
-/processor:ModelProcessor
-/processorParam:ColorKeyColor=0,0,0,0
-/processorParam:ColorKeyEnabled=True
-/processorParam:DefaultEffect=BasicEffect
-/processorParam:GenerateMipmaps=True
-/processorParam:GenerateTangentFrames=False
-/processorParam:PremultiplyTextureAlpha=True
-/processorParam:PremultiplyVertexColors=True
-/processorParam:ResizeTexturesToPowerOfTwo=False
-/processorParam:RotationX=0
-/processorParam:RotationY=0
-/processorParam:RotationZ=0
-/processorParam:Scale=1
-/processorParam:SwapWindingOrder=False
-/processorParam:TextureFormat=Compressed
-/build:KayKit_Prototype_Bits_1.1_FREE/Assets/obj/Dummy_Base.obj
-
-#begin KayKit_Prototype_Bits_1.1_FREE/Assets/obj/Dummy_Base_Dummy_Body.obj
-/importer:FbxImporter
-/processor:ModelProcessor
-/processorParam:ColorKeyColor=0,0,0,0
-/processorParam:ColorKeyEnabled=True
-/processorParam:DefaultEffect=BasicEffect
-/processorParam:GenerateMipmaps=True
-/processorParam:GenerateTangentFrames=False
-/processorParam:PremultiplyTextureAlpha=True
-/processorParam:PremultiplyVertexColors=True
-/processorParam:ResizeTexturesToPowerOfTwo=False
-/processorParam:RotationX=0
-/processorParam:RotationY=0
-/processorParam:RotationZ=0
-/processorParam:Scale=1
-/processorParam:SwapWindingOrder=False
-/processorParam:TextureFormat=Compressed
-/build:KayKit_Prototype_Bits_1.1_FREE/Assets/obj/Dummy_Base_Dummy_Body.obj
 
 #begin KayKit_Prototype_Bits_1.1_FREE/Assets/obj/Dummy_Base_Dummy_Body_Dummy_ArmLeft.obj
 /importer:FbxImporter
@@ -144,3 +107,23 @@
 /processorParam:SwapWindingOrder=False
 /processorParam:TextureFormat=Compressed
 /build:KayKit_Prototype_Bits_1.1_FREE/Assets/obj/Dummy_Base_Dummy_Body_Dummy_Target.obj
+
+#begin KayKit_Prototype_Bits_1.1_FREE/Assets/obj/Dummy_Base_Dummy_Body.obj
+/importer:FbxImporter
+/processor:ModelProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:DefaultEffect=BasicEffect
+/processorParam:GenerateMipmaps=True
+/processorParam:GenerateTangentFrames=False
+/processorParam:PremultiplyTextureAlpha=True
+/processorParam:PremultiplyVertexColors=True
+/processorParam:ResizeTexturesToPowerOfTwo=False
+/processorParam:RotationX=0
+/processorParam:RotationY=0
+/processorParam:RotationZ=0
+/processorParam:Scale=1
+/processorParam:SwapWindingOrder=False
+/processorParam:TextureFormat=Compressed
+/build:KayKit_Prototype_Bits_1.1_FREE/Assets/obj/Dummy_Base_Dummy_Body.obj
+
