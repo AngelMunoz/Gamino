@@ -4,6 +4,8 @@ Gamino is a minimal F# MonoGame project demonstrating how to set up a 3D isometr
 
 > Assets used in this project are sourced from https://kaylousberg.itch.io/prototype-bits
 
+![Gamino Screenshot](image.png)
+
 ## Key Features
 
 - **F# Architecture**: Uses a functional, module-based architecture separating Game Logic, Initialization, and Rendering from the MonoGame `Game` class wrapper.

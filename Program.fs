@@ -10,21 +10,15 @@ open Microsoft.Xna.Framework.Input
 // ==========================================
 
 /// Represents the state of the camera in our isometric world.
-type IsometricCamera = {
-    View : Matrix
-    Projection : Matrix
-}
+type IsometricCamera = { View: Matrix; Projection: Matrix }
 
 /// Holds all the assets we've loaded.
-type GameAssets = {
-    Models : Map<string, Model>
-}
+type GameAssets = { Models: Map<string, Model> }
 
 /// The entire state of our game world at any given frame.
-type GameState = {
-    Rotation : float32
-    Camera : IsometricCamera
-}
+type GameState =
+    { Rotation: float32
+      Camera: IsometricCamera }
 
 // ==========================================
 // 2. Constants & Configuration
@@ -36,21 +30,20 @@ let AssetRoot = "Content"
 [<Literal>]
 let AssetPathPrefix = "KayKit_Prototype_Bits_1.1_FREE/Assets/obj/"
 
-let DummyParts = [
-    "Dummy_Base"
-    "Dummy_Base_Dummy_Body"
-    "Dummy_Base_Dummy_Body_Dummy_ArmLeft"
-    "Dummy_Base_Dummy_Body_Dummy_ArmRight"
-    "Dummy_Base_Dummy_Body_Dummy_Head"
-    "Dummy_Base_Dummy_Body_Dummy_Target"
-]
+let DummyParts =
+    [ "Dummy_Base"
+      "Dummy_Base_Dummy_Body"
+      "Dummy_Base_Dummy_Body_Dummy_ArmLeft"
+      "Dummy_Base_Dummy_Body_Dummy_ArmRight"
+      "Dummy_Base_Dummy_Body_Dummy_Head"
+      "Dummy_Base_Dummy_Body_Dummy_Target" ]
 
 // ==========================================
 // 3. Initialization Logic
 // ==========================================
 
 module Initialization =
-    
+
     /// Creates the initial camera setup for an isometric orthographic view.
     let createCamera (device: GraphicsDevice) =
         // View: Classic isometric angle (looking from 20,20,20 towards origin)
@@ -64,31 +57,26 @@ module Initialization =
 
         { View = view; Projection = projection }
 
-    /// Loads a single model safely, returning Some(Model) or None if it fails.
     let private tryLoadModel (content: ContentManager) (name: string) (path: string) =
         try
-            Some (name, content.Load<Model>(path))
-        with
-        | ex -> 
+            Some(name, content.Load<Model> path)
+        with ex ->
             printfn "Failed to load asset '%s': %s" name ex.Message
             None
 
     /// Loads all required game assets.
     let loadAssets (content: ContentManager) =
-        // 1. Load Dummy Parts (results in list of (string * Model) option)
-        let dummyModels = 
-            DummyParts 
-            |> List.map (fun name -> tryLoadModel content name (AssetPathPrefix + name))
+        let models = ResizeArray()
 
-        // 2. Load Barrel (results in (string * Model) option)
-        let barrelModel = tryLoadModel content "Barrel" (AssetPathPrefix + "Barrel_A")
+        // 1. Load Dummy Parts
+        for name in DummyParts do
+            tryLoadModel content name (AssetPathPrefix + name) |> Option.iter models.Add
 
-        // Combine into a Map
-        // We flatten the list of options into a single list of valid tuples
-        let allModels = 
-            (barrelModel :: dummyModels)
-            |> List.choose id
-            |> Map.ofList
+        // 2. Load Barrel
+        tryLoadModel content "Barrel" (AssetPathPrefix + "Barrel_A")
+        |> Option.iter models.Add
+
+        let allModels = models |> Map.ofSeq
 
         { Models = allModels }
 
@@ -100,19 +88,26 @@ module Update =
 
     /// Returns the new game state based on input and elapsed time.
     /// In a pure functional architecture, this takes State -> State.
-    let updateState (gameTime: GameTime) (currentInput: KeyboardState) (gamePad: GamePadState) (currentState: GameState) =
-        
+    let updateState
+        (gameTime: GameTime)
+        (currentInput: KeyboardState)
+        (gamePad: GamePadState)
+        (currentState: GameState)
+        =
+
         // Check for exit conditions (handled by the wrapper usually, but logic belongs here)
-        let shouldExit = 
-            gamePad.Buttons.Back = ButtonState.Pressed || 
-            currentInput.IsKeyDown(Keys.Escape)
+        let shouldExit =
+            gamePad.Buttons.Back = ButtonState.Pressed || currentInput.IsKeyDown Keys.Escape
 
         // Calculate new rotation based on time
         let newRotation = float32 gameTime.TotalGameTime.TotalSeconds
 
         // Return a tuple of (ShouldExit, NewState)
-        let nextState = { currentState with Rotation = newRotation }
-        (shouldExit, nextState)
+        let nextState =
+            { currentState with
+                Rotation = newRotation }
+
+        shouldExit, nextState
 
 // ==========================================
 // 5. Drawing Logic
@@ -124,7 +119,7 @@ module Rendering =
     let private configureEffect (camera: IsometricCamera) (world: Matrix) (effect: BasicEffect) =
         effect.EnableDefaultLighting()
         effect.PreferPerPixelLighting <- true
-        
+
         // Lighting Setup
         effect.AmbientLightColor <- Vector3(0.5f, 0.5f, 0.5f)
         effect.DirectionalLight0.Direction <- Vector3(1.0f, -1.0f, -1.0f)
@@ -141,12 +136,13 @@ module Rendering =
         for mesh in model.Meshes do
             for effect in mesh.Effects do
                 configureEffect camera world (effect :?> BasicEffect)
+
             mesh.Draw()
 
     /// The main render loop.
-    let drawScene (device: GraphicsDevice) (assets: GameAssets) (state: GameState) =
-        device.Clear(Color.CornflowerBlue)
-        
+    let drawScene (device: GraphicsDevice) (state: GameState) (assets: GameAssets) =
+        device.Clear Color.CornflowerBlue
+
         // Important: Enable Depth Buffer for 3D rendering
         device.DepthStencilState <- DepthStencilState.Default
         device.SamplerStates.[0] <- SamplerState.LinearWrap
@@ -154,35 +150,35 @@ module Rendering =
         // 1. Draw Background Row (Separated Parts)
         let startX = -5.0f
         let spacing = 2.0f
-        
-        DummyParts |> List.iteri (fun i name ->
+
+        DummyParts
+        |> List.iteri (fun i name ->
             match assets.Models.TryFind name with
             | Some model ->
-                let xPos = startX + (float32 i * spacing)
+                let xPos = startX + float32 i * spacing
                 let position = Matrix.CreateTranslation(Vector3(xPos, 0.0f, -3.0f))
                 drawModel state.Camera model position
-            | None -> ()
-        )
+            | None -> ())
 
         // 2. Draw Assembled Dummy (Foreground, Rotating)
-        let assembledPosition = 
-            Matrix.CreateRotationY(state.Rotation) * 
-            Matrix.CreateTranslation(Vector3(0.0f, 0.0f, 3.0f))
-        
-        DummyParts |> List.iter (fun name ->
+        let assembledPosition =
+            Matrix.CreateRotationY state.Rotation
+            * Matrix.CreateTranslation(Vector3(0.0f, 0.0f, 3.0f))
+
+        DummyParts
+        |> List.iter (fun name ->
             match assets.Models.TryFind name with
-            | Some model ->
-                drawModel state.Camera model assembledPosition
-            | None -> ()
-        )
+            | Some model -> drawModel state.Camera model assembledPosition
+            | None -> ())
 
         // 3. Draw Rotating Barrel (Far Left)
         match assets.Models.TryFind "Barrel" with
         | Some barrel ->
-             let barrelPos = 
-                Matrix.CreateRotationY(state.Rotation * 2.0f) * 
-                Matrix.CreateTranslation(Vector3(-6.0f, 0.0f, 3.0f))
-             drawModel state.Camera barrel barrelPos
+            let barrelPos =
+                Matrix.CreateRotationY(state.Rotation * 2.0f)
+                * Matrix.CreateTranslation(Vector3(-6.0f, 0.0f, 3.0f))
+
+            drawModel state.Camera barrel barrelPos
         | None -> ()
 
 
@@ -192,15 +188,17 @@ module Rendering =
 
 type GaminoGame() as this =
     inherit Game()
-    
+
     let graphics = new GraphicsDeviceManager(this)
-    let mutable assets : GameAssets option = None
-    
+
+    let mutable assets: GameAssets option = None
+
     // Mutable state container
-    let mutable state = { 
-        Rotation = 0.0f; 
-        Camera = { View = Matrix.Identity; Projection = Matrix.Identity } 
-    }
+    let mutable state =
+        { Rotation = 0.0f
+          Camera =
+            { View = Matrix.Identity
+              Projection = Matrix.Identity } }
 
     do
         this.Content.RootDirectory <- AssetRoot
@@ -208,33 +206,37 @@ type GaminoGame() as this =
         this.Window.AllowUserResizing <- true
 
     override this.Initialize() =
+        this.Services.AddService graphics
         // Initialize logic-based state (Camera) using the device
-        state <- { state with Camera = Initialization.createCamera this.GraphicsDevice }
+        state <-
+            { state with
+                Camera = Initialization.createCamera this.GraphicsDevice }
+
         base.Initialize()
 
     override this.LoadContent() =
         // Load immutable assets
-        assets <- Some (Initialization.loadAssets this.Content)
+        assets <- Some(Initialization.loadAssets this.Content)
 
-    override this.Update(gameTime) =
+    override this.Update gameTime =
         let keyboard = Keyboard.GetState()
-        let gamepad = GamePad.GetState(PlayerIndex.One)
+        let gamepad = GamePad.GetState PlayerIndex.One
 
         // Run pure update logic
-        let (shouldExit, newState) = Update.updateState gameTime keyboard gamepad state
-        
+        let shouldExit, newState = Update.updateState gameTime keyboard gamepad state
+
         // Update mutable shell
         state <- newState
 
-        if shouldExit then this.Exit()
-        base.Update(gameTime)
+        if shouldExit then
+            this.Exit()
 
-    override this.Draw(gameTime) =
-        match assets with
-        | Some a -> Rendering.drawScene this.GraphicsDevice a state
-        | None -> () // Loading...
+        base.Update gameTime
 
-        base.Draw(gameTime)
+    override this.Draw gameTime =
+        assets |> Option.iter (Rendering.drawScene this.GraphicsDevice state)
+
+        base.Draw gameTime
 
 [<EntryPoint>]
 let main argv =
