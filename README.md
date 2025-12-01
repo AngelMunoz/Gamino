@@ -2,17 +2,19 @@
 
 Gamino is a minimal F# MonoGame project demonstrating how to set up a 3D isometric rendering environment using `.obj` models. It features an "assembled" character composed of multiple 3D parts (head, body, arms) rendering in a staggered isometric projection.
 
+> Assets used in this project are sourced from https://kaylousberg.itch.io/prototype-bits
+
 ## Key Features
 
-*   **F# Architecture**: Uses a functional, module-based architecture separating Game Logic, Initialization, and Rendering from the MonoGame `Game` class wrapper.
-*   **Isometric Camera**: Implements an orthographic camera setup to simulate a 2.5D isometric view suitable for staggered tile maps.
-*   **3D Model Compositing**: Demonstrates how to render multiple independent 3D model parts sharing a common origin to appear as a single animated entity.
+- **F# Architecture**: Uses a functional, module-based architecture separating Game Logic, Initialization, and Rendering from the MonoGame `Game` class wrapper.
+- **Isometric Camera**: Implements an orthographic camera setup to simulate a 2.5D isometric view suitable for staggered tile maps.
+- **3D Model Compositing**: Demonstrates how to render multiple independent 3D model parts sharing a common origin to appear as a single animated entity.
 
 ## Project Structure
 
-*   `Program.fs`: The main entry point and game logic.
-*   `Gamino.Core`: A module containing the functional core of the game.
-*   `Content/`: Contains the assets and the MonoGame Content Builder configuration (`.mgcb`).
+- `Program.fs`: The main entry point and game logic.
+- `Gamino.Core`: A module containing the functional core of the game.
+- `Content/`: Contains the assets and the MonoGame Content Builder configuration (`.mgcb`).
 
 ## Working with Content (MonoGame Content Pipeline)
 
@@ -33,7 +35,8 @@ The content is automatically built when you run `dotnet build`. However, you can
 ```bash
 dotnet mgcb-editor-linux Content/Content.mgcb
 ```
-*(Note: Replace `dotnet-mgcb-editor-linux` with the appropriate command for your OS if different, or use `dotnet mgcb` for the CLI version).*
+
+_(Note: Replace `dotnet-mgcb-editor-linux` with the appropriate command for your OS if different, or use `dotnet mgcb` for the CLI version)._
 
 ### Important: The `.obj` File Caveat
 
