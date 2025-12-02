@@ -17,7 +17,8 @@ type GameAssets = { Models: Map<string, Model> }
 
 /// The entire state of our game world at any given frame.
 type GameState =
-    { Rotation: float32
+    { Position: Vector2
+      Rotation: float32
       Camera: IsometricCamera }
 
 // ==========================================
@@ -99,12 +100,43 @@ module Update =
         let shouldExit =
             gamePad.Buttons.Back = ButtonState.Pressed || currentInput.IsKeyDown Keys.Escape
 
-        // Calculate new rotation based on time
-        let newRotation = float32 gameTime.TotalGameTime.TotalSeconds
+        // Movement Logic
+        let speed = 5.0f * float32 gameTime.ElapsedGameTime.TotalSeconds
+        let mutable inputVelocity = Vector2.Zero
+
+        if currentInput.IsKeyDown Keys.Up then inputVelocity.Y <- inputVelocity.Y - 1.0f
+        if currentInput.IsKeyDown Keys.Down then inputVelocity.Y <- inputVelocity.Y + 1.0f
+        if currentInput.IsKeyDown Keys.Left then inputVelocity.X <- inputVelocity.X - 1.0f
+        if currentInput.IsKeyDown Keys.Right then inputVelocity.X <- inputVelocity.X + 1.0f
+
+        let newPosition, newRotation =
+            if inputVelocity <> Vector2.Zero then
+                inputVelocity <- Vector2.Normalize inputVelocity
+                
+                // Transform 2D Input -> Isometric World 3D Motion
+                // Screen Up (Input Y-) corresponds to World (-X, -Z)
+                // Screen Right (Input X+) corresponds to World (+X, -Z)
+                // Formula: 
+                // WorldX = InputX + InputY
+                // WorldZ = InputY - InputX
+                
+                let worldDx = inputVelocity.X + inputVelocity.Y
+                let worldDz = inputVelocity.Y - inputVelocity.X
+                
+                // Normalize the world velocity to maintain constant speed
+                let worldVelocity = Vector2(worldDx, worldDz) |> Vector2.Normalize
+
+                // Calculate Angle: Atan2(x, z)
+                let angle = float32 (System.Math.Atan2(float worldVelocity.X, float worldVelocity.Y))
+
+                (currentState.Position + worldVelocity * speed, angle)
+            else
+                (currentState.Position, currentState.Rotation)
 
         // Return a tuple of (ShouldExit, NewState)
         let nextState =
             { currentState with
+                Position = newPosition
                 Rotation = newRotation }
 
         shouldExit, nextState
@@ -146,6 +178,8 @@ module Rendering =
         // Important: Enable Depth Buffer for 3D rendering
         device.DepthStencilState <- DepthStencilState.Default
         device.SamplerStates.[0] <- SamplerState.LinearWrap
+        // Enable MSAA on rasterizer (backbuffer MSAA is configured via GraphicsDeviceManager)
+        device.RasterizerState <- new RasterizerState(MultiSampleAntiAlias = true)
 
         // 1. Draw Background Row (Separated Parts)
         let startX = -5.0f
@@ -160,10 +194,11 @@ module Rendering =
                 drawModel state.Camera model position
             | None -> ())
 
-        // 2. Draw Assembled Dummy (Foreground, Rotating)
+        // 2. Draw Assembled Dummy (Foreground, Movable)
+        // We map 2D State.Position (X, Y) -> 3D World (X, 0, Z)
         let assembledPosition =
             Matrix.CreateRotationY state.Rotation
-            * Matrix.CreateTranslation(Vector3(0.0f, 0.0f, 3.0f))
+            * Matrix.CreateTranslation(Vector3(state.Position.X, 0.0f, state.Position.Y))
 
         DummyParts
         |> List.iter (fun name ->
@@ -171,12 +206,11 @@ module Rendering =
             | Some model -> drawModel state.Camera model assembledPosition
             | None -> ())
 
-        // 3. Draw Rotating Barrel (Far Left)
+        // 3. Draw Barrel (Far Left)
         match assets.Models.TryFind "Barrel" with
         | Some barrel ->
             let barrelPos =
-                Matrix.CreateRotationY(state.Rotation * 2.0f)
-                * Matrix.CreateTranslation(Vector3(-6.0f, 0.0f, 3.0f))
+                Matrix.CreateTranslation(Vector3(-6.0f, 0.0f, 3.0f))
 
             drawModel state.Camera barrel barrelPos
         | None -> ()
@@ -195,7 +229,8 @@ type GaminoGame() as this =
 
     // Mutable state container
     let mutable state =
-        { Rotation = 0.0f
+        { Position = Vector2(0.0f, 3.0f)
+          Rotation = 0.0f
           Camera =
             { View = Matrix.Identity
               Projection = Matrix.Identity } }
